@@ -7,6 +7,9 @@ from email.mime.application import MIMEApplication
 from dotenv import load_dotenv
 import os
 import re
+from collections import Counter
+import pandas as pd
+import openpyxl
 
 # Slack channel to send the message to
 SLACK_API_TOKEN = "xoxb-6253138637332-6243077942519-9yBMEnwdIgBRMOmQ3anhRQOA"
@@ -53,7 +56,7 @@ text ="""
 contentPart = MIMEText(text,'html')
 msg.attach(contentPart)
 
-file_name='access.log'
+file_name='2023-11-30_insert_member.xlsx'
 etc_file_path = fr'{file_name}'
 with open (etc_file_path,'rb') as f:
     etc_part = MIMEApplication(f.read())
@@ -66,3 +69,30 @@ smtp.quit()
 #for file_name in files:
 output_path = f"{file_name}"
 sendSlackWebhook(output_path)
+if file_name.endswith('.log'):
+    with open(file_name,'r') as f:
+        ip_list = re.findall(r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}", str(f.read()))
+    ip_counter = Counter(ip_list)
+    top_10_ips = ip_counter.most_common(10)
+    print(top_10_ips)
+
+wb = openpyxl.load_workbook(file_name)
+sheet = wb.active
+
+info_warning = False
+phone_pattern = r'\d{3}-\d{3,4}-\d{4}'
+email_pattern = r"[a-zA-Z0-9._+-]+@[a-zA-Z0-9]+\.[a-zA-Z]{2,4}"
+for row in sheet.iter_rows():
+    for cell in row:
+        if re.findall(phone_pattern,str(cell.value)):
+            info_warning = True
+        elif re.findall(email_pattern,str(cell.value)):
+            info_warning = True
+if info_warning:
+    print("위험 정보 있음")
+else:
+    print("위험 정보 없음")
+
+for row in sheet.iter_rows():
+    for cell in row:
+        print(str(cell))
