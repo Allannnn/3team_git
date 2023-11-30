@@ -1,5 +1,7 @@
 import openpyxl
 import re
+import pandas as pd
+import os
 
 file_name = '2023-11-30_insert_member.xlsx'
 output_path = f"{file_name}"
@@ -22,8 +24,8 @@ else:
     print("위험 정보 없음")
 
 safe_warning = False
-for row in sheet.iter_rows():
-    print(row[6:11])
+#for row in sheet.iter_rows():
+#    print(row[6:11])
     #for cell in row[7]:
         #print()
         #if re.findall('False',str(cell.value)):
@@ -31,3 +33,15 @@ for row in sheet.iter_rows():
         #elif safe_warning:
         #    for cell in row[6:11]:
         #        if re.findall('False',str(cell.value)):
+        
+df = pd.read_excel(file_name)
+df.to_csv(f'{file_name}.txt',sep='|',index=False)
+
+with open(f'{file_name}.txt','r',encoding='utf-8') as f:
+    lines = f.readlines()
+    head_info=list(map(str,lines[0].split('|')))
+    print(head_info)
+    print()
+    for line in lines[1:]:
+        print(line)
+
